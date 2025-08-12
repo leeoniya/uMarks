@@ -4,6 +4,11 @@ let rad = deg => (deg * PI) / 180;
 let deg = rad => (rad * 180) / PI;
 let safeAcos = x => x < -1 ? PI : x > 1 ? 0 : acos(x);
 let sqrtAbs = x => sqrt(abs(x));
+let chunk = (arr, size) =>
+  arr.reduce((acc, _, i) => {
+    i % size == 0 && acc.push(arr.slice(i, i + size));
+    return acc;
+  }, []);
 
 let vectorAngle = ([ux, uy], [vx, vy]) => {
   let sign = ux * vy - uy * vx < 0 ? -1 : 1;
@@ -13,6 +18,8 @@ let vectorAngle = ([ux, uy], [vx, vy]) => {
 
   return sign * safeAcos(dot / (ua * va));
 };
+
+let reflect = (cx, cy, pcx, pcy) => [pcx == null ? cx : cx * 2 - pcx, pcy == null ? cy : cy * 2 - pcy];
 
 // https://www.w3.org/TR/SVG/implnote.html#ArcConversionCenterToEndpoint
 // impl adapted and tweaked from
@@ -84,13 +91,6 @@ function endpointToCenter(x1, y1, rx, ry, rot, fa, fs, x2, y2) {
     dTheta < 0
   ];
 }
-
-let reflect = (cx, cy, pcx, pcy) => [pcx == null ? cx : cx * 2 - pcx, pcy == null ? cy : cy * 2 - pcy];
-let chunk = (arr, size) =>
-  arr.reduce((acc, _, i) => {
-    i % size == 0 && acc.push(arr.slice(i, i + size));
-    return acc;
-  }, []);
 
 // TODO:
 
