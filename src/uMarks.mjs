@@ -12,7 +12,7 @@ let vectorAngle = ([ux, uy], [vx, vy]) => {
   let dot = ux * vx + uy * vy;
 
   return sign * safeAcos(dot / (ua * va));
-}
+};
 
 // https://www.w3.org/TR/SVG/implnote.html#ArcConversionCenterToEndpoint
 // impl adapted and tweaked from
