@@ -18,9 +18,24 @@ export default [
     input: "./src/uMarks.mjs",
     output: {
       name: 'uMarks',
+      file: "./dist/uMarks.mjs",
+      format: "es",
+    },
+  },
+  {
+    input: "./src/uMarks.mjs",
+    output: {
+      name: 'uMarks',
+      file: "./dist/uMarks.iife.js",
+      format: "iife",
+    },
+  },
+  {
+    input: "./src/uMarks.mjs",
+    output: {
+      name: 'uMarks',
       file: "./dist/uMarks.iife.min.js",
       format: "iife",
-      strict: true,
     },
     plugins: [
       terser(terserOpts),

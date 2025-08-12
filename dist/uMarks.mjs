@@ -121,9 +121,9 @@ let C = 'bezierCurveTo';
 let A = 'ellipse';
 let Z = 'closePath';
 
-export function createPathDrawer(pathStr) {
+function createPathDrawer(pathStr) {
   // console.time('getBBox');
-  let bbox = getBBox(pathStr);
+  getBBox(pathStr);
   // console.timeEnd('getBBox');
 
   // console.log(bbox);
@@ -205,3 +205,5 @@ export function createPathDrawer(pathStr) {
   // should accept a callback that reports bbox
   return new Function('ctx', 's', 'x', 'y', `s ??= 1;ctx.${funcBody.join(';ctx.')};`);
 }
+
+export { createPathDrawer };
