@@ -118,8 +118,8 @@ let M = 'moveTo';
 let L = 'lineTo';
 let Q = 'quadraticCurveTo';
 let C = 'bezierCurveTo';
-let A = 'ellipse';
-let Z = 'closePath';
+
+let call = (fn, ...args) => `c.${fn}(${args.map(a => `s * ${a}`).join(',')})`;
 
 function createPathDrawer(pathStr) {
   // console.time('getBBox');
@@ -168,31 +168,34 @@ function createPathDrawer(pathStr) {
     switch (type) {
       case 'T':
         [_qx, _qy] = reflect(x, y, _qx, _qy);
-        funcBody.push(`${Q}(s * ${_qx}, s * ${_qy}, s * ${x = p[0]}, s * ${y = p[1]})`);
+        funcBody.push(call(Q, _qx, _qy, x = p[0], y = p[1]));
         _cx = _cy = null;
         break;
       case 'S':
         [_cx, _cy] = reflect(x, y, _cx, _cy);
-        funcBody.push(`${C}(s * ${_cx}, s * ${_cy}, s * ${_cx = p[0]}, s * ${_cy = p[1]}, s * ${x = p[2]}, s * ${y = p[3]})`);
+        funcBody.push(call(C, _cx, _cy, _cx = p[0], _cy = p[1], x = p[2], y = p[3]));
         _qx = _qy = null;
         break;
       case 'A':
         let p2 = endpointToCenter(x, y, ...p);
         x = p[5];
         y = p[6];
-        funcBody.push(`${A}(s * ${p2[0]}, s * ${p2[1]}, s * ${p2[2]}, s * ${p2[3]}, ${p2[4]}, ${p2[5]}, ${p2[6]}, ${p2[7]})`);
+        funcBody.push(`c.ellipse(s * ${p2[0]}, s * ${p2[1]}, s * ${p2[2]}, s * ${p2[3]}, ${p2[4]}, ${p2[5]}, ${p2[6]}, ${p2[7]})`);
         break;
       case 'Z':
-        funcBody.push(`${Z}()`);
+        funcBody.push(`c.closePath()`);
         break;
       default:
         funcBody.push(
-          type == 'M' ? `${M}(s * ${x = p[0]}, s * ${y = p[1]})` :
-          type == 'L' ? `${L}(s * ${x = p[0]}, s * ${y = p[1]})` :
-          type == 'V' ? `${L}(s * ${x}, s * ${y = p[0]})` :
-          type == 'H' ? `${L}(s * ${x = p[0]}, s * ${y})` :
-          type == 'C' ? `${C}(s * ${p[0]}, s * ${p[1]}, s * ${_cx = p[2]}, s * ${_cy = p[3]}, s * ${x = p[4]}, s * ${y = p[5]})` :
-          type == 'Q' ? `${Q}(s * ${_qx = p[0]}, s * ${_qy = p[1]}, s * ${x = p[2]}, s * ${y = p[3]})` :
+          type == 'M' ? call(M, x = p[0], y = p[1]) :
+          type == 'L' ? call(L, x = p[0], y = p[1]) :
+
+          type == 'V' ? call(L, x,        y = p[0]) :
+          type == 'H' ? call(L, x = p[0], y) :
+
+          type == 'C' ? call(C, p[0], p[1], _cx = p[2], _cy = p[3], x = p[4], y = p[5]) :
+          type == 'Q' ? call(Q,             _qx = p[0], _qy = p[1], x = p[2], y = p[3]) :
+
           ''
         );
     }
@@ -203,7 +206,7 @@ function createPathDrawer(pathStr) {
 
   // TODO: introduce shift dx, dy to draw at dynamic coords
   // should accept a callback that reports bbox
-  return new Function('ctx', 's', 'x', 'y', `s ??= 1;ctx.${funcBody.join(';ctx.')};`);
+  return new Function('c', 's', 'x', 'y', `s ??= 1;${funcBody.join(';')};`);
 }
 
 export { createPathDrawer };
