@@ -21,6 +21,16 @@ let vectorAngle = ([ux, uy], [vx, vy]) => {
 
 let reflect = (cx, cy, pcx, pcy) => [pcx == null ? cx : cx * 2 - pcx, pcy == null ? cy : cy * 2 - pcy];
 
+let parser = new DOMParser();
+let getBBox = path => {
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" style="position: fixed; left: 100%; top: 100%; visibility: hidden;"><path d="${path}" /></svg>`;
+  let el = parser.parseFromString(svg, "image/svg+xml").documentElement;
+  document.body.appendChild(el);
+  let bbox = el.firstChild.getBBox();
+  el.remove();
+  return bbox;
+};
+
 // https://www.w3.org/TR/SVG/implnote.html#ArcConversionCenterToEndpoint
 // impl adapted and tweaked from
 // https://github.com/zjffun/svg-arc-center-endpoint
@@ -105,7 +115,10 @@ function endpointToCenter(x1, y1, rx, ry, rot, fa, fs, x2, y2) {
 // optimize poly with segment cache scaled up? point-in-polygon-hao
 
 export function createPathDrawer(pathStr) {
-  // bbox for svg is calculated with getBBox
+  let bbox = getBBox(pathStr);
+
+  console.log(bbox);
+
   // center shift is established via scale * -bbox.width/2, scale * -bbox.height/2
   // then unscaled x and y data coord shifts are also applied to all coords
 
@@ -164,7 +177,6 @@ export function createPathDrawer(pathStr) {
         break;
       case 'Z':
         funcBody += `ctx.closePath();`;
-        // funcBody += `ctx.beginPath();`;
         break;
       default:
         funcBody += (
