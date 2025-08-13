@@ -118,12 +118,9 @@ var uMarks = (function (exports) {
   }
 
   // TODO:
-
+  // drawer accept a callback that reports bbox
   // relative commands (test mixed)
   // Path2D or ctx2d (w/z sub-paths)
-  // render to svg to getBBox
-  // offset for centering on data point
-  // pass in x coord, y coord
   // rotation? pass in along with coords + scale
   // use isPointInPath hit testing, with on-demand Path2D on hover
   // optimize circles, rects, triangle up/down, diamond, maybe plus, cross
@@ -134,17 +131,13 @@ var uMarks = (function (exports) {
   let Q = 'quadraticCurveTo';
   let C = 'bezierCurveTo';
 
-  let call = (fn, ...args) => `c.${fn}(${args.map(a => `s * ${a}`).join(',')})`;
+  // xc, yc are centroid % location relative to bbox; by default center of bbox
+  function createPathDrawer(pathStr, xc = 0.5, yc = 0.5) {
+    let bbox = getBBox(pathStr);
+    let xo = -bbox.width  * xc;
+    let yo = -bbox.height * yc;
 
-  function createPathDrawer(pathStr) {
-    // console.time('getBBox');
-    getBBox(pathStr);
-    // console.timeEnd('getBBox');
-
-    // console.log(bbox);
-
-    // center shift is established via scale * -bbox.width/2, scale * -bbox.height/2
-    // then unscaled x and y data coord shifts are also applied to all coords
+    let call = (fn, ...args) => `c.${fn}(${args.map((a, i) => `${i % 2 == 0 ? `x` : `y`} + s * ${a + (i % 2 == 0 ? xo : yo)}`).join(',')})`;
 
     let cmds = pathStr.match(/[A-Z][^A-Z]*/g).flatMap(cmd => {
       let c = cmd[0];
@@ -195,7 +188,7 @@ var uMarks = (function (exports) {
           let p2 = endpointToCenter(x, y, ...p);
           x = p[5];
           y = p[6];
-          funcBody.push(`c.ellipse(s * ${p2[0]}, s * ${p2[1]}, s * ${p2[2]}, s * ${p2[3]}, ${p2[4]}, ${p2[5]}, ${p2[6]}, ${p2[7]})`);
+          funcBody.push(`c.ellipse(x + s * ${p2[0] + xo}, y + s * ${p2[1] + yo}, s * ${p2[2]}, s * ${p2[3]}, ${p2[4]}, ${p2[5]}, ${p2[6]}, ${p2[7]})`);
           break;
         case 'Z':
           funcBody.push(`c.closePath()`);
@@ -219,9 +212,7 @@ var uMarks = (function (exports) {
         _cx = _cy = _qx = _qy = null;
     }
 
-    // TODO: introduce shift dx, dy to draw at dynamic coords
-    // should accept a callback that reports bbox
-    return new Function('c', 's', 'x', 'y', `s ??= 1;${funcBody.join(';')};`);
+    return new Function('c', 'x', 'y', 's', `x??=0;y??=0;s??=1;${funcBody.join(';')};`);
   }
 
   exports.createPathDrawer = createPathDrawer;
