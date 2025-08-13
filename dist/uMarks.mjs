@@ -42,7 +42,7 @@ function endpointToCenter(x1, y1, rx, ry, rot, fa, fs, x2, y2) {
   let cosPhi = cos(phi);
 
   // Step 1: simplify through translation/rotation
-  let x1_ = (cosPhi * (x1 - x2)) / 2 + (sinPhi * (y1 - y2)) / 2;
+  let x1_ = ( cosPhi * (x1 - x2)) / 2 + (sinPhi * (y1 - y2)) / 2;
   let y1_ = (-sinPhi * (x1 - x2)) / 2 + (cosPhi * (y1 - y2)) / 2;
   let x1_p2 = pow(x1_, 2);
   let y1_p2 = pow(y1_, 2);
@@ -74,15 +74,27 @@ function endpointToCenter(x1, y1, rx, ry, rot, fa, fs, x2, y2) {
    * `pow(sqrt(L) * rx, 2)` will less than `L * pow(rx, 2)` when we run B.2.5. Correction of out-of-range radii
    * so below value will be negative, we need use abs to fix it
    */
-  let M = sqrtAbs((rxp2 * ryp2 - rxp2 * y1_p2 - ryp2 * x1_p2) / (rxp2 * y1_p2 + ryp2 * x1_p2)) * sign;
-  let cx_ = (M * (rx * y1_)) / ry;
+  let M = sqrtAbs(
+    (rxp2 *  ryp2 - rxp2 * y1_p2 - ryp2 * x1_p2) /
+    (rxp2 * y1_p2 + ryp2 * x1_p2)
+  ) * sign;
+
+  let cx_ = (M * ( rx * y1_)) / ry;
   let cy_ = (M * (-ry * x1_)) / rx;
   let cx = cosPhi * cx_ - sinPhi * cy_ + (x1 + x2) / 2;
   let cy = sinPhi * cx_ + cosPhi * cy_ + (y1 + y2) / 2;
 
   // Step 4: compute θ and dθ
-  let theta = deg(vectorAngle([1, 0], [(x1_ - cx_) / rx, (y1_ - cy_) / ry]));
-  let dTheta = deg(vectorAngle([(x1_ - cx_) / rx, (y1_ - cy_) / ry], [(-x1_ - cx_) / rx, (-y1_ - cy_) / ry])) % 360;
+  let _a = [
+    ( x1_ - cx_) / rx,
+    ( y1_ - cy_) / ry,
+  ];
+  let _b = [
+    (-x1_ - cx_) / rx,
+    (-y1_ - cy_) / ry,
+  ];
+  let theta  = deg(vectorAngle([1, 0], _a));
+  let dTheta = deg(vectorAngle(_a, _b)) % 360;
 
   if (fs === 0 && dTheta > 0)
     dTheta -= 360;
